@@ -1,0 +1,20 @@
+{
+    "Gen II": {
+        "Bulbasaur": {
+            "dex_num": "001",
+            "Name": "Bulbasaur",
+            "Other Names": "\n\t\t\t Japan: Fushigidane\u30d5\u30b7\u30ae\u30c0\u30cd\n\t\t\t French: Bulbizarre\n\t\t\t German: Bisasam\n\t\t\t Korean: \uc774\uc0c1\ud574\uc528\n\t\t\t",
+            "No.": " National: #001\n\t\t\tJohto: #226\n\n\t\t\t",
+            "Gender Ratio": " Male \u2642:87.5%Female \u2640:12.5%",
+            "Type": [
+                "grass",
+                "poison"
+            ],
+            "Classification": "Seed Pok\u00e9mon",
+            "Height": "2'04\"\n\t\t\t0.7m",
+            "Weight": "15.2lbs\n\t\t\t6.9kg",
+            "Capture Rate": "45",
+            "Base Egg Steps": "5,120"
+        }
+    }
+}

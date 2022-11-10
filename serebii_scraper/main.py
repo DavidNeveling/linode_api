@@ -1,5 +1,7 @@
 from bs4 import BeautifulSoup, NavigableString
-import requests, json, re
+from tqdm import tqdm
+import requests, json, re, time
+
 
 def fill_front_of_string(string, fillnum, fillchar):
     retstart = ''
@@ -20,7 +22,7 @@ pokedex_link_dict = {}
 for link in dex_links:
     pokedex_link_dict[link.get_text()[:-4]] = link['href']
 
-pokedex_link_dict = {'Gen II': '/pokedex-gs/'}
+pokedex_link_dict = {'Gen IV': '/pokedex-dp/'}
 pokemon_by_gen_and_number_link_dict = {}
 for gen, link in pokedex_link_dict.items():
     pokemon_by_gen_and_number_link_dict[gen] = []
@@ -47,7 +49,7 @@ pokemon_by_gen_and_number_link_dict
 pokemon_info_by_gen_dict = {}
 for gen, link_info in pokemon_by_gen_and_number_link_dict.items():
     pokemon_info_by_gen_dict[gen] = {}
-    for pkmn_info in link_info:
+    for pkmn_info in tqdm(link_info):
 
         pokedex_page_link = serebii_base_url + pkmn_info['pkmn_link']
         # print(pokedex_page_link)
@@ -63,7 +65,7 @@ for gen, link_info in pokemon_by_gen_and_number_link_dict.items():
             for j, info_table in enumerate(info_tables):
                 
                 info_body = info_table.find('tbody')
-                print(info_table)
+                # print(info_table)
                 table_rows = [tr for tr in info_body.contents if not isinstance(tr, NavigableString)]
 
                 header_row = None
@@ -78,24 +80,33 @@ for gen, link_info in pokemon_by_gen_and_number_link_dict.items():
                         # print(table_row)
                         try:
                             # header_names = [child.get_text() for child in header_row.children if child.get_text().strip() != '']
-                            header_names = [child.get_text() for child in header_row.children if not isinstance(child, NavigableString)]
+                            header_names = [child.get_text().strip() for child in header_row.children if not isinstance(child, NavigableString)]
                         except:
                             continue
-                        print(header_names)
+                        # print(header_names)
                         if len(header_names) <= 0:
                             continue
                         if header_names[0] == 'Picture':
                             continue
-                        print(list(table_row.children))
+                        # print(list(table_row.children))
                         for info_i, info_child in enumerate([child for child in table_row.children if not isinstance(child, NavigableString)]):
+                            if len(header_names) < 1 or info_i >= len(header_names):
+                                break
+                            # custom for Ability, Experience Points (pts, category), effort values (split if multi), fix No. 
                             if header_names[info_i] == 'Type':
                                 pokemon_info_dict[header_names[info_i]] = [type_info['href'][type_info['href'].rfind('/')+1:type_info['href'].rfind('.')] for type_info in info_child.find_all('a')]
+                            elif header_names[info_i] == 'Gender Ratio':
+                                pokemon_info_dict[header_names[info_i]] = [str(info_child.get_text().strip()[:info_child.get_text().strip().find('%')+1]), str(info_child.get_text().strip()[info_child.get_text().strip().find('%')+1:])]
+                                pokemon_info_dict[header_names[info_i]] = dict(zip([x[:x.find(':')].strip() for x in pokemon_info_dict[header_names[info_i]]], [x[x.find(':')+1:].strip() for x in pokemon_info_dict[header_names[info_i]]]))
                             else:
-                                pokemon_info_dict[header_names[info_i]] = str(info_child.get_text())
+                                pokemon_info_dict[header_names[info_i]] = [x for x in re.split(r'[\n\t]', info_child.get_text().strip()) if len(x) > 0]
+                                if all([x.find(':') >= 0 for x in pokemon_info_dict[header_names[info_i]]]):
+                                    pokemon_info_dict[header_names[info_i]] = dict(zip([x[:x.find(':')].strip() for x in pokemon_info_dict[header_names[info_i]]], [x[x.find(':')+1:].strip() for x in pokemon_info_dict[header_names[info_i]]]))
+
                 if j == 1:
                     break
         pokemon_info_by_gen_dict[gen][name] = pokemon_info_dict
-        break
+        # break
             
 
 f = open('/root/linode_api/serebii_scraper/pokemon_info_by_gen.json', 'w')
